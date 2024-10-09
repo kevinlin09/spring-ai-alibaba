@@ -19,6 +19,7 @@ package com.alibaba.cloud.ai.dashscope.api;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.alibaba.dashscope.Version;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -50,6 +51,33 @@ public class ApiUtils {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			if (stream) {
 				headers.set("X-DashScope-SSE", "enable");
+			}
+		};
+	}
+
+	public static String userAgent() {
+		return String.format("dashscope/%s; java/%s; platform/%s; processor/%s", Version.version,
+				System.getProperty("java.version"), System.getProperty("os.name"), System.getProperty("os.arch"));
+	}
+
+	// public static HttpHeaders getWebsocketJsonContentHeaders(String apiKey, String
+	// workspaceId) {
+	// HttpHeaders headers = new HttpHeaders();
+	// headers.set("Authorization", "bearer " + apiKey);
+	// headers.set("user-agent", userAgent());
+	// if (workspaceId != null && !workspaceId.isEmpty()) {
+	// headers.set("X-DashScope-WorkSpace", workspaceId);
+	// }
+	// return headers;
+	// }
+
+	public static Consumer<? super io.netty.handler.codec.http.HttpHeaders> getWebsocketJsonContentHeaders(
+			String apiKey, String workspaceId) {
+		return (headers) -> {
+			headers.set("Authorization", "bearer " + apiKey);
+			headers.set("user-agent", userAgent());
+			if (workspaceId != null && !workspaceId.isEmpty()) {
+				headers.set("X-DashScope-WorkSpace", workspaceId);
 			}
 		};
 	}

@@ -15,13 +15,25 @@
  */
 package com.alibaba.cloud.ai.dashscope.api;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.alibaba.cloud.ai.dashscope.audio.speech.SpeechPrompt;
 import com.alibaba.cloud.ai.dashscope.common.DashScopeApiConstants;
+import com.alibaba.dashscope.common.*;
+import com.alibaba.dashscope.protocol.ApiServiceOption;
+import com.alibaba.dashscope.protocol.HalfDuplexRequest;
+import com.alibaba.dashscope.protocol.Protocol;
+import com.alibaba.dashscope.protocol.StreamingMode;
+import com.alibaba.dashscope.protocol.okhttp.OkHttpWebSocketClient;
+import com.alibaba.dashscope.protocol.okhttp.OkHttpClientFactory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -50,6 +62,8 @@ public class DashScopeAudioApi {
 
 	private final WebClient webClient;
 
+	private final OkHttpWebSocketClient webSocketClient;
+
 	/**
 	 * Create a new audio api.
 	 * @param dashScopeToken DashScope apiKey.
@@ -76,6 +90,8 @@ public class DashScopeAudioApi {
 		this.webClient = WebClient.builder().baseUrl(baseUrl).defaultHeaders(headers -> {
 			headers.setBearerAuth(dashScopeToken);
 		}).defaultHeaders(ApiUtils.getJsonContentHeaders(dashScopeToken)).build();
+
+		this.webSocketClient = new OkHttpWebSocketClient(OkHttpClientFactory.getOkHttpClient());
 	}
 
 	/**
@@ -122,6 +138,8 @@ public class DashScopeAudioApi {
 				h.addAll(headers);
 			})
 			.defaultHeaders(ApiUtils.getJsonContentHeaders(apiKey)).build();
+
+		this.webSocketClient = new OkHttpWebSocketClient(OkHttpClientFactory.getOkHttpClient());
 		// @formatter:on
 	}
 
@@ -622,6 +640,22 @@ public class DashScopeAudioApi {
 	 */
 	public ResponseEntity<byte[]> createSpeech(SpeechRequest requestBody) {
 		return this.restClient.post().uri("/v1/audio/speech").body(requestBody).retrieve().toEntity(byte[].class);
+	}
+
+	public byte[] call(SpeechPrompt prompt) {
+		ApiServiceOption apiServiceOption = ApiServiceOption.builder()
+			.protocol(Protocol.WEBSOCKET)
+			.streamingMode(StreamingMode.OUT)
+			.outputMode(OutputMode.ACCUMULATE)
+			.taskGroup(TaskGroup.AUDIO.getValue())
+			.task(Task.TEXT_TO_SPEECH.getValue())
+			.function(Function.SPEECH_SYNTHESIZER.getValue())
+			.build();
+
+		HalfDuplexRequest req = new HalfDuplexRequest(prompt.toSpeechSynthesisParam(), apiServiceOption);
+
+		Flowable<DashScopeResult> flowable = this.webSocketClient.streamOut(req);
+		return null;
 	}
 
 	/**

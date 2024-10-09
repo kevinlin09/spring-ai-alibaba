@@ -166,7 +166,8 @@ public class DashScopeAudioSpeechModelOpenAPI implements SpeechModel, StreamingS
 			}
 		}
 
-		String input = ObjectUtils.isEmpty(options.getText()) ? options.getText() : request.getInstructions().getText();
+		String input = ObjectUtils.isEmpty(request.getInstructions().getText()) ? options.getText()
+				: request.getInstructions().getText();
 
 		DashScopeAudioApi.SpeechRequest.Builder requestBuilder = DashScopeAudioApi.SpeechRequest.builder()
 			.withModel(options.getModel())

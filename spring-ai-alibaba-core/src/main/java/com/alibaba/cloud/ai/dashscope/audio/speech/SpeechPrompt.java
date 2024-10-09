@@ -19,6 +19,7 @@ package com.alibaba.cloud.ai.dashscope.audio.speech;
 import java.util.Objects;
 
 import com.alibaba.cloud.ai.dashscope.audio.DashScopeAudioSpeechOptions;
+import com.alibaba.dashscope.audio.tts.SpeechSynthesisParam;
 
 import org.springframework.ai.model.ModelOptions;
 import org.springframework.ai.model.ModelRequest;
@@ -84,6 +85,18 @@ public class SpeechPrompt implements ModelRequest<SpeechMessage> {
 	public int hashCode() {
 
 		return Objects.hash(speechOptions, message);
+	}
+
+	public SpeechSynthesisParam toSpeechSynthesisParam() {
+		return SpeechSynthesisParam.builder()
+			.text(speechOptions.getText())
+			.model(speechOptions.getModel())
+			.sampleRate(speechOptions.getSampleRate())
+			.volume(speechOptions.getVolume())
+			.pitch(speechOptions.getPitch())
+			.enablePhonemeTimestamp(speechOptions.isEnablePhonemeTimestamp())
+			.enableWordTimestamp(speechOptions.isEnableWordTimestamp())
+			.build();
 	}
 
 }

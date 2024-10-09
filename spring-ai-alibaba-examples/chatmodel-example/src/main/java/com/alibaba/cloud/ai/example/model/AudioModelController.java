@@ -16,9 +16,13 @@
  */
 package com.alibaba.cloud.ai.example.model;
 
+import com.alibaba.cloud.ai.dashscope.api.DashScopeAudioApi;
+import com.alibaba.cloud.ai.dashscope.audio.DashScopeAudioSpeechModelOpenAPI;
 import com.alibaba.cloud.ai.dashscope.audio.speech.AudioSpeechModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,12 +33,20 @@ public class AudioModelController {
 
     private static final Logger logger = LoggerFactory.getLogger(AudioModelController.class);
 
+    private final DashScopeAudioApi dashScopeAudioApi;
+
+    private DashScopeAudioSpeechModelOpenAPI audioSpeechModel;
+
+    public AudioModelController(DashScopeAudioApi dashScopeAudioApi) {
+        this.dashScopeAudioApi = dashScopeAudioApi;
+        this.audioSpeechModel = new DashScopeAudioSpeechModelOpenAPI(dashScopeAudioApi);
+    }
+
     @GetMapping("/speech")
-    public String speech(String text) {
+    public byte[] speech(String text) {
+        byte[] response = this.audioSpeechModel.call(text);
 
-        logger.warn("unimplement");
-
-        return "unimplement";
+        return response;
     }
 
     @GetMapping("/transcription")
